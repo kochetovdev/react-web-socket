@@ -1,25 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import "./App.css";
+import socket from "./utilities/socketConnection";
+import Widget from "./perfDataComponents/Widget";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [performanceData, setPerformanceData] = useState({});
+  const perfMachineData = {};
+
+  useEffect(() => {
+    //listen for perfData
+    socket.on("perfData", (data) => {
+      console.log(data.macA)
+      //one line of data came through for one machine
+      //updateour LOCAL (non-state) variable, to include that new data
+      perfMachineData[data.macA] = data; //this will not cause a re-render
+    });
+  }, []); //run this once the component has rendered
+
+  useEffect(() => {
+    setInterval(() => {
+      setPerformanceData(perfMachineData); 
+    }, 1000);
+  }, []);
+
+  const widgets = Object.values(performanceData).map((d) => (
+    <Widget data={d} key={d.macA} />
+  ));
+
+  return <div className="container">{widgets}</div>;
 }
 
 export default App;
